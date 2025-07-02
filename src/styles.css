@@ -1,1 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Puedes añadir tus estilos globales personalizados debajo de estas directivas */
+body {
+  font-family: 'Arial', sans-serif; /* Ejemplo: Define una fuente base */
+}

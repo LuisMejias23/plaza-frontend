@@ -1,0 +1,119 @@
+ <div class="max-w-3xl mx-auto my-8 p-6 bg-white rounded-lg shadow-xl">
+      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Mi Perfil de Usuario</h1>
+
+      <div *ngIf="isLoading" class="text-center text-blue-600 my-4">Cargando perfil...</div>
+      <div *ngIf="errorMessage" class="text-center text-red-600 my-4">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="text-center text-green-600 my-4 font-bold">{{ successMessage }}</div>
+
+      <div *ngIf="userForm" class="space-y-6">
+        <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-4">Información Personal</h2>
+        <form [formGroup]="userForm" (ngSubmit)="updateProfile()">
+          <div class="mb-4">
+            <label for="username" class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
+            <input id="username" type="text" formControlName="username"
+                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <div *ngIf="userForm.get('username')?.invalid && userForm.get('username')?.touched" class="text-red-500 text-xs mt-1">
+              Nombre de usuario es requerido.
+            </div>
+          </div>
+          <div class="mb-4">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input id="email" type="email" formControlName="email"
+                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <div *ngIf="userForm.get('email')?.invalid && userForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+              Email es requerido y debe ser válido.
+            </div>
+          </div>
+          <div class="mb-6">
+            <label for="password" class="block text-sm font-medium text-gray-700">Contraseña (dejar en blanco para no cambiar)</label>
+            <input id="password" type="password" formControlName="password"
+                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          <button type="submit" [disabled]="userForm.invalid || isUpdatingProfile"
+                  class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            <span *ngIf="!isUpdatingProfile">Actualizar Perfil</span>
+            <span *ngIf="isUpdatingProfile" class="flex items-center justify-center">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Actualizando...
+            </span>
+          </button>
+        </form>
+
+        <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-4 mt-8">Mis Direcciones de Envío</h2>
+        <div *ngIf="userAddresses.length > 0; else noAddresses" class="space-y-4">
+          <div *ngFor="let address of userAddresses; let i = index" class="border border-gray-200 p-4 rounded-md shadow-sm flex justify-between items-center">
+            <div>
+              <p class="font-medium text-gray-800">{{ address.address }}, {{ address.city }}</p>
+              <p class="text-sm text-gray-600">{{ address.state }}, {{ address.postalCode }}</p>
+              <p class="text-sm text-gray-600">{{ address.country }}</p>
+            </div>
+            <div>
+              <button (click)="editAddress(address)" class="text-blue-600 hover:text-blue-800 mr-3">Editar</button>
+              <button (click)="deleteAddress(address._id!)" class="text-red-600 hover:text-red-800">Eliminar</button>
+            </div>
+          </div>
+        </div>
+        <ng-template #noAddresses>
+          <p class="text-gray-600 text-center py-4">No tienes direcciones guardadas.</p>
+        </ng-template>
+
+        <button (click)="openAddressModal()"
+                class="w-full mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+          Añadir Nueva Dirección
+        </button>
+
+        <div *ngIf="isAddressModalOpen" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div class="relative p-8 bg-white w-full max-w-md mx-auto rounded-lg shadow-lg">
+            <h3 class="text-xl font-bold mb-4">{{ isEditingAddress ? 'Editar Dirección' : 'Añadir Dirección' }}</h3>
+            <form [formGroup]="addressForm" (ngSubmit)="saveAddress()" class="space-y-4">
+              <div>
+                <label for="address" class="block text-sm font-medium text-gray-700">Calle y Número</label>
+                <input id="address" type="text" formControlName="address" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                <div *ngIf="addressForm.get('address')?.invalid && addressForm.get('address')?.touched" class="text-red-500 text-xs mt-1">Requerido.</div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="city" class="block text-sm font-medium text-gray-700">Ciudad</label>
+                  <input id="city" type="text" formControlName="city" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <div *ngIf="addressForm.get('city')?.invalid && addressForm.get('city')?.touched" class="text-red-500 text-xs mt-1">Requerido.</div>
+                </div>
+                <div>
+                  <label for="state" class="block text-sm font-medium text-gray-700">Estado/Provincia</label>
+                  <input id="state" type="text" formControlName="state" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <div *ngIf="addressForm.get('state')?.invalid && addressForm.get('state')?.touched" class="text-red-500 text-xs mt-1">Requerido.</div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label for="postalCode" class="block text-sm font-medium text-gray-700">Código Postal</label>
+                  <input id="postalCode" type="text" formControlName="postalCode" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <div *ngIf="addressForm.get('postalCode')?.invalid && addressForm.get('postalCode')?.touched" class="text-red-500 text-xs mt-1">Requerido.</div>
+                </div>
+                <div>
+                  <label for="country" class="block text-sm font-medium text-gray-700">País</label>
+                  <input id="country" type="text" formControlName="country" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md">
+                  <div *ngIf="addressForm.get('country')?.invalid && addressForm.get('country')?.touched" class="text-red-500 text-xs mt-1">Requerido.</div>
+                </div>
+              </div>
+              <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" (click)="closeAddressModal()" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-gray-700 hover:bg-gray-50">Cancelar</button>
+                <button type="submit" [disabled]="addressForm.invalid || isSavingAddress"
+                        class="py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50">
+                  <span *ngIf="!isSavingAddress">Guardar Dirección</span>
+                  <span *ngIf="isSavingAddress" class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Guardando...
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>

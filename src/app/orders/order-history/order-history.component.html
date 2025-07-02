@@ -1,0 +1,51 @@
+<div class="max-w-6xl mx-auto my-8 p-6 bg-white rounded-lg shadow-xl">
+      <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Mi Historial de Pedidos</h1>
+
+      <div *ngIf="isLoading" class="text-center text-blue-600 my-4">Cargando tus pedidos...</div>
+      <div *ngIf="errorMessage" class="text-center text-red-600 my-4">{{ errorMessage }}</div>
+
+      <div *ngIf="!isLoading && !errorMessage">
+        <div *ngIf="(orders$ | async) as orders; else noOrders">
+          <div *ngIf="orders.length > 0; else noOrders">
+            <div class="overflow-x-auto">
+              <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">ID de Pedido</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Fecha</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Total</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Pagado</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Entregado</th>
+                    <th class="py-3 px-4 text-left text-sm font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let order of orders" class="border-b border-gray-200 hover:bg-gray-50">
+                    <td class="py-3 px-4 text-sm text-gray-700">{{ order._id }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-700">{{ order.createdAt | date:'shortDate' }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-700">${{ order.totalPrice | number:'1.2-2' }}</td>
+                    <td class="py-3 px-4 text-sm text-gray-700">
+                      <span *ngIf="order.isPaid" class="text-green-600 font-medium">Sí ({{ order.paidAt | date:'shortDate' }})</span>
+                      <span *ngIf="!order.isPaid" class="text-red-600 font-medium">No</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm text-gray-700">
+                      <span *ngIf="order.isDelivered" class="text-green-600 font-medium">Sí ({{ order.deliveredAt | date:'shortDate' }})</span>
+                      <span *ngIf="!order.isDelivered" class="text-red-600 font-medium">No</span>
+                    </td>
+                    <td class="py-3 px-4 text-sm">
+                      <a [routerLink]="['/order', order._id]" class="text-blue-600 hover:underline">Ver Detalles</a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <ng-template #noOrders>
+          <div class="text-center my-8 p-6 bg-blue-50 text-blue-800 border border-blue-200 rounded-md">
+            Aún no has realizado ningún pedido. ¡Empieza a comprar!
+            <a routerLink="/products" class="text-indigo-600 hover:underline ml-2">Explorar productos</a>
+          </div>
+        </ng-template>
+      </div>
+    </div>
