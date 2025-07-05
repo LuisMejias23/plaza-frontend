@@ -6,11 +6,20 @@
       <a routerLink="/cart" class="ml-4 hover:underline">Carrito</a>
 
       <ng-container *ngIf="(currentUser$ | async) as user; else guestLinks">
+        <!-- Enlaces para usuarios logueados -->
         <a routerLink="/profile" class="ml-4 hover:underline">Hola, {{ user.username }}</a>
-        <a routerLink="/myorders" class="ml-4 hover:underline">Mis Pedidos</a> <button (click)="logout()" class="ml-4 hover:underline bg-red-500 py-1 px-3 rounded-md">Cerrar Sesión</button>
+        <a routerLink="/myorders" class="ml-4 hover:underline">Mis Pedidos</a>
+
+        <!-- Botón para el Dashboard de Admin (visible solo para administradores) -->
+        <a *ngIf="user.role === 'admin'" routerLink="/admin/dashboard" class="ml-4 hover:underline bg-blue-700 py-1 px-3 rounded-md">
+          Dashboard Admin
+        </a>
+
+        <button (click)="logout()" class="ml-4 hover:underline bg-red-500 py-1 px-3 rounded-md">Cerrar Sesión</button>
       </ng-container>
 
       <ng-template #guestLinks>
+        <!-- Enlaces para usuarios no logueados (invitados) -->
         <a routerLink="/login" class="ml-4 hover:underline">Login</a>
         <a routerLink="/register" class="ml-4 hover:underline">Registro</a>
       </ng-template>

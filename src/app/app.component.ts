@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet, RouterModule } from '@angular/router'; // Importar Router y RouterModule
-import { AuthService } from './core/auth.service'; // Importar AuthService
+import { AuthService } from './core/auth/auth.service'; // Importar AuthService
 import { User } from './shared/models/User'; // Importar el modelo User
 import { Observable } from 'rxjs';
 

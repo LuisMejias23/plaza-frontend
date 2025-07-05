@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/auth.service'; // Para obtener/actualizar el carrito
+import { AuthService } from '../../core/auth/auth.service'; // Para obtener/actualizar el carrito
 import { User, CartItem } from '../../shared/models/User'; // Modelos de Usuario y CartItem
 import { Router, RouterModule } from '@angular/router'; // Para redireccionar y enlaces
 import { Observable, BehaviorSubject } from 'rxjs';

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule,FormsModule } from '@angular/forms'; // Para formularios reactivos
 import { Router } from '@angular/router'; // Para redireccionar
-import { AuthService } from '../../core/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { OrderService } from '../../orders/order.service'; // Crearemos este servicio
 import { User, CartItem, Address } from '../../shared/models/User'; // User, CartItem y Address están en User.ts
 import { Product } from '../../shared/models/Product'; // <-- ¡Product está en Product.ts!

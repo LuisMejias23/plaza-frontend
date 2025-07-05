@@ -1,65 +1,83 @@
-<div *ngIf="isLoading" class="text-center text-blue-600 my-8">Cargando detalles del producto...</div>
-    <div *ngIf="errorMessage" class="text-center text-red-600 my-8">{{ errorMessage }}</div>
+<div *ngIf="isLoading" class="text-center text-blue-600 my-8 text-xl font-semibold">Cargando detalles del producto...</div>
+<div *ngIf="errorMessage" class="text-center text-red-600 my-8 text-xl font-semibold p-4 border border-red-300 bg-red-50 rounded-lg">
+  {{ errorMessage }}
+  <button (click)="goBack()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300">Volver a Productos</button>
+</div>
 
-    <div *ngIf="product" class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-8">
-      <div class="md:flex">
-        <div class="md:flex-shrink-0">
-          <img class="h-96 w-full object-cover md:w-80" [src]="product.imageUrl" [alt]="product.name">
+<div *ngIf="product" class="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden my-8 p-4">
+  <div class="md:flex">
+    <div class="md:flex-shrink-0 md:w-80">
+      <img
+        class="h-96 w-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none"
+        [src]="product.imageUrl || 'https://via.placeholder.com/600x400?text=Imagen+no+disponible'"
+        [alt]="product.name"
+      >
+    </div>
+
+    <div class="p-8 flex-1 flex flex-col justify-between">
+      <div>
+        <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-2">
+          {{ product.brand }} - {{ product.category }}
         </div>
-        <div class="p-8 flex-1">
-          <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">{{ product.brand }} - {{ product.category }}</div>
-          <h1 class="block mt-1 text-4xl leading-tight font-bold text-gray-900">{{ product.name }}</h1>
-          <p class="mt-2 text-gray-600 text-lg">{{ product.description }}</p>
+        <h1 class="block mt-1 text-4xl leading-tight font-bold text-gray-900 mb-4">{{ product.name }}</h1>
+        <p class="mt-2 text-gray-600 text-lg leading-relaxed">{{ product.description }}</p>
 
-          <div class="mt-4 flex items-center justify-between">
-            <div class="text-3xl font-extrabold text-blue-700">$ {{ product.price | number:'1.2-2' }}</div>
-            <div class="flex items-center text-lg text-gray-700">
-              <span class="mr-1 text-yellow-500">★</span> {{ product.rating | number:'1.1-1' }} ({{ product.numReviews }} reseñas)
-            </div>
+        <div class="mt-6 flex items-center justify-between">
+          <div class="text-4xl font-extrabold text-blue-700">$ {{ product.price | number:'1.2-2' }}</div>
+          <div class="flex items-center text-xl text-gray-700">
+            <span class="mr-2 text-yellow-500">★</span> {{ product.rating | number:'1.1-1' }} ({{ product.numReviews }} reseñas)
           </div>
+        </div>
 
-          <div class="mt-6">
-            <p class="text-lg font-medium text-gray-700">
-              Disponibilidad:
-              <span [ngClass]="{'text-green-600': product.countInStock > 0, 'text-red-600': product.countInStock === 0}">
-                {{ product.countInStock > 0 ? 'En Stock (' + product.countInStock + ' unidades)' : 'Agotado' }}
-              </span>
-            </p>
-          </div>
-
-          <div class="mt-8 flex items-center space-x-4">
-            <label for="quantity" class="text-lg font-medium text-gray-700">Cantidad:</label>
-            <select
-              id="quantity"
-              [(ngModel)]="quantity"
-              class="form-select block w-24 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-              [disabled]="product.countInStock === 0"
-            >
-              <option *ngFor="let qty of [].constructor(product.countInStock); let i = index" [ngValue]="i + 1">{{ i + 1 }}</option>
-            </select>
-
-            <button
-              (click)="addToCart()"
-              [disabled]="product.countInStock === 0 || isAddingToCart"
-              class="flex-1 py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span *ngIf="!isAddingToCart">Añadir al Carrito</span>
-              <span *ngIf="isAddingToCart" class="flex items-center justify-center">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Añadiendo...
-              </span>
-            </button>
-          </div>
-          <div *ngIf="addToCartMessage" class="mt-4 text-center text-green-600 text-sm font-medium">{{ addToCartMessage }}</div>
-          <div *ngIf="addToCartError" class="mt-4 text-center text-red-600 text-sm font-medium">{{ addToCartError }}</div>
-
+        <div class="mt-6">
+          <p class="text-lg font-medium text-gray-700">
+            Disponibilidad:
+            <span [ngClass]="{'text-green-600': product.countInStock > 0, 'text-red-600': product.countInStock === 0}">
+              {{ product.countInStock > 0 ? 'En Stock (' + product.countInStock + ' unidades)' : 'Agotado' }}
+            </span>
+          </p>
         </div>
       </div>
-    </div>
 
-    <div *ngIf="!product && !isLoading && !errorMessage" class="text-center text-gray-600 my-8">
-      Producto no encontrado o no disponible.
+      <div class="mt-8">
+        <div class="flex items-center space-x-4">
+          <label for="quantity" class="text-lg font-medium text-gray-700">Cantidad:</label>
+          <select
+            id="quantity"
+            [(ngModel)]="quantity"
+            class="form-select block w-28 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+            [disabled]="product.countInStock === 0"
+          >
+            <option *ngFor="let qtyOption of [].constructor(product.countInStock); let i = index" [ngValue]="i + 1">{{ i + 1 }}</option>
+          </select>
+
+          <button
+            (click)="addToCart()"
+            [disabled]="product.countInStock === 0 || isAddingToCart"
+            class="flex-1 py-3 px-6 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-300"
+          >
+            <span *ngIf="!isAddingToCart">Añadir al Carrito</span>
+            <span *ngIf="isAddingToCart" class="flex items-center justify-center">
+              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Añadiendo...
+            </span>
+          </button>
+        </div>
+
+        <div *ngIf="addToCartMessage" class="mt-4 text-center text-green-600 text-base font-medium p-2 bg-green-50 rounded-md">{{ addToCartMessage }}</div>
+        <div *ngIf="addToCartError" class="mt-4 text-center text-red-600 text-base font-medium p-2 bg-red-50 rounded-md">{{ addToCartError }}</div>
+      </div>
+
+      <div class="mt-8 text-center">
+        <button (click)="goBack()" class="text-blue-600 hover:underline text-lg focus:outline-none">← Volver a Productos</button>
+      </div>
     </div>
+  </div>
+</div>
+
+<div *ngIf="!product && !isLoading && !errorMessage" class="text-center text-gray-600 my-8 text-xl font-semibold">
+  Producto no encontrado o no disponible.
+</div>

@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Product } from '../shared/models/Product'; // Crearemos este modelo en un momento
-import { AuthService } from '../core/auth.service'; // Importar AuthService para obtener el token
+import { AuthService } from '../core/auth/auth.service'; // Importar AuthService para obtener el token
 
 @Injectable({
   providedIn: 'root'

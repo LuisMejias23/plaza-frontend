@@ -1,67 +1,62 @@
+// src/app/core/order.service.ts
+
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { AuthService } from '../core/auth.service'; // Para obtener el token
-import { Order } from '../shared/models/Order'; // Crearemos este modelo
-import { CartItem, Address } from '../shared/models/User'; // Para tipos de OrderData
-
-// Define la estructura de datos que se envía al backend para crear un pedido
-interface CreateOrderData {
-  orderItems: { product: string; quantity: number }[]; // Solo ID y cantidad
-  shippingAddress: Address;
-  paymentMethod: string;
-  itemsPrice: number;
-  shippingPrice: number;
-  taxPrice: number;
-  totalPrice: number;
-}
-
+import { Order } from '../shared/models/Order';
+import { AuthService } from '../core/auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
-  private apiUrl = 'http://localhost:5000/api/orders'; // Asegúrate de que coincida con tu backend
+  private apiUrl = 'http://localhost:5000/api/orders';
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
   private getAuthHeaders(): HttpHeaders {
     const currentUser = this.authService.currentUserValue;
     const token = currentUser?.token;
     if (!token) {
-      // Manejar el caso donde no hay token, quizás lanzar un error o redirigir
-      throw new Error('No hay token de autenticación disponible.');
+      console.warn('OrderService: No se encontró token de autenticación.');
     }
     return new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': token ? `Bearer ${token}` : ''
     });
   }
 
-  // @desc    Crear un nuevo pedido
-  // @route   POST /api/orders
-  // @access  Private
-  createOrder(order: CreateOrderData): Observable<Order> {
+  /**
+   * @desc Create a new order
+   * @route POST /api/orders
+   * @access Private
+   * @param order The order data to be sent to the backend (e.g., orderItems, shippingAddress)
+   */
+  createOrder(order: any): Observable<Order> { // You might want to define a specific interface for 'order' data later
     const httpOptions = { headers: this.getAuthHeaders() };
     return this.http.post<Order>(this.apiUrl, order, httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  // @desc    Obtener los pedidos del usuario logueado
-  // @route   GET /api/orders/myorders
-  // @access  Private
-  getMyOrders(): Observable<Order[]> {
+  /**
+   * @desc Get all orders for the logged-in user
+   * @route GET /api/orders/myorders
+   * @access Private
+   */
+  getUserOrders(): Observable<Order[]> { // Ensure this explicitly returns Observable<Order[]>
     const httpOptions = { headers: this.getAuthHeaders() };
     return this.http.get<Order[]>(`${this.apiUrl}/myorders`, httpOptions).pipe(
       catchError(this.handleError)
     );
   }
 
-  // @desc    Obtener un pedido por ID
-  // @route   GET /api/orders/:id
-  // @access  Private
+  /**
+   * @desc Get specific order by ID
+   * @route GET /api/orders/:id
+   * @access Private
+   */
   getOrderById(id: string): Observable<Order> {
     const httpOptions = { headers: this.getAuthHeaders() };
     return this.http.get<Order>(`${this.apiUrl}/${id}`, httpOptions).pipe(
@@ -69,15 +64,48 @@ export class OrderService {
     );
   }
 
-  // Manejo de errores HTTP
-  private handleError(error: any) {
-    let errorMessage = '';
+  // --- Métodos de administración ---
+
+  getOrders(): Observable<Order[]> { // Obtener TODAS las órdenes (para admin)
+    const httpOptions = { headers: this.getAuthHeaders() };
+    return this.http.get<Order[]>(this.apiUrl, httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateOrderToDelivered(orderId: string): Observable<Order> { // Marcar orden como entregada (solo admin)
+    const httpOptions = { headers: this.getAuthHeaders() };
+    // Un PUT a /api/orders/:id/deliver con un cuerpo vacío es suficiente para el backend
+    return this.http.put<Order>(`${this.apiUrl}/${orderId}/deliver`, {}, httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * @desc Mark order as paid
+   * @route PUT /api/orders/:id/pay
+   * @access Private/Admin (or Private for payment gateway webhooks)
+   * @param orderId The ID of the order to mark as paid
+   * @param paymentResult An object with payment details (e.g., { id: 'paypal_id', status: 'COMPLETED' })
+   */
+  markOrderAsPaid(orderId: string, paymentResult: any): Observable<Order> {
+    const httpOptions = { headers: this.getAuthHeaders() };
+    return this.http.put<Order>(`${this.apiUrl}/${orderId}/pay`, paymentResult, httpOptions).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Un error desconocido ocurrió.';
     if (error.error instanceof ErrorEvent) {
-      errorMessage = `Error: ${error.error.message}`;
+      errorMessage = `Error del cliente: ${error.error.message}`;
     } else {
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.error.message || error.statusText}`;
+      console.error(
+        `Código de error del backend ${error.status}, ` +
+        `cuerpo: ${JSON.stringify(error.error)}`
+      );
+      errorMessage = error.error?.message || `Error del servidor: ${error.status} - ${error.statusText}`;
     }
-    console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 }
