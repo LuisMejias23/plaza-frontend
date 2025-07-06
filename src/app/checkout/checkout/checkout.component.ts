@@ -1,11 +1,19 @@
+// src/app/checkout/checkout/checkout.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule,FormsModule } from '@angular/forms'; // Para formularios reactivos
-import { Router } from '@angular/router'; // Para redireccionar
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+  FormsModule,
+} from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
-import { OrderService } from '../../orders/order.service'; // Crearemos este servicio
-import { User, CartItem, Address } from '../../shared/models/User'; // User, CartItem y Address están en User.ts
-import { Product } from '../../shared/models/Product'; // <-- ¡Product está en Product.ts!
+import { OrderService } from '../../orders/order.service';
+import { User, CartItem, Address } from '../../shared/models/User';
+import { Product } from '../../shared/models/Product';
 import { Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -15,29 +23,29 @@ import { of } from 'rxjs';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './checkout.component.html',
-  styleUrl: './checkout.component.css'
+  styleUrl: './checkout.component.css',
 })
 export class CheckoutComponent implements OnInit {
   shippingAddressForm!: FormGroup;
-  paymentMethod: string = ''; // 'PayPal' o 'Credit Card'
-  submitted: boolean = false; // Para controlar la validación del método de pago
+  paymentMethod: string = '';
+  submitted: boolean = false;
   isProcessingOrder: boolean = false;
   isLoading: boolean = true;
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorSubject<(CartItem & { product: Product })[]>([]);
+  cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> =
+    new BehaviorSubject<(CartItem & { product: Product })[]>([]);
   cartTotal: number = 0;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private orderService: OrderService, // Lo inyectaremos aquí
+    private orderService: OrderService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Redirigir si el usuario no está logueado
     if (!this.authService.currentUserValue) {
       this.router.navigate(['/login']);
       return;
@@ -63,41 +71,47 @@ export class CheckoutComponent implements OnInit {
 
     combineLatest([
       this.authService.getUserCart(),
-      this.authService.getProfile() // Para precargar dirección si existe
-    ]).pipe(
-      tap(([cart, userProfile]) => {
-        if (cart.length === 0) {
-          this.errorMessage = 'Tu carrito está vacío. Añade productos antes de finalizar la compra.';
-          // Opcional: Redirigir a la página de productos si el carrito está vacío
-          // this.router.navigate(['/products']);
-        } else {
-          this.cartItems$.next(cart);
-          this.calculateCartTotal(cart);
-        }
+      this.authService.getProfile(),
+    ])
+      .pipe(
+        tap(([cart, userProfile]) => {
+          if (cart.length === 0) {
+            this.errorMessage =
+              'Tu carrito está vacío. Añade productos antes de finalizar la compra.';
+            // Opcional: Redirigir a la página de productos si el carrito está vacío
+            this.router.navigate(['/products']); // Redirige si el carrito está vacío
+          } else {
+            this.cartItems$.next(cart);
+            this.calculateCartTotal(cart);
+          }
 
-        // Si el usuario tiene direcciones guardadas, precarga la primera
-        if (userProfile.addresses && userProfile.addresses.length > 0) {
-          const defaultAddress = userProfile.addresses[0]; // O podrías tener una lógica para elegir la "predeterminada"
-          this.shippingAddressForm.patchValue(defaultAddress);
-        }
-      }),
-      catchError(err => {
-        console.error('Error loading cart or profile:', err);
-        this.errorMessage = err.message || 'Error al cargar datos necesarios para el checkout.';
+          if (userProfile.addresses && userProfile.addresses.length > 0) {
+            const defaultAddress = userProfile.addresses[0];
+            this.shippingAddressForm.patchValue(defaultAddress);
+          }
+        }),
+        catchError((err) => {
+          console.error('Error loading cart or profile:', err);
+          this.errorMessage =
+            err.message || 'Error al cargar datos necesarios para el checkout.';
+          this.isLoading = false;
+          return of([]);
+        })
+      )
+      .subscribe(() => {
         this.isLoading = false;
-        return of([]); // Devuelve un observable vacío para que la suscripción no falle
-      })
-    ).subscribe(() => {
-      this.isLoading = false;
-    });
+      });
   }
 
   calculateCartTotal(items: (CartItem & { product: Product })[]): void {
-    this.cartTotal = items.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+    this.cartTotal = items.reduce(
+      (acc, item) => acc + item.product.price * item.quantity,
+      0
+    );
   }
 
   placeOrder(): void {
-    this.submitted = true; // Para mostrar errores de validación
+    this.submitted = true;
     this.successMessage = null;
     this.errorMessage = null;
 
@@ -120,47 +134,50 @@ export class CheckoutComponent implements OnInit {
 
     this.isProcessingOrder = true;
 
-    // Prepara los items del pedido como espera el backend (solo product ID y quantity)
-    const orderItems = currentCart.map(item => ({
+    const orderItems = currentCart.map((item) => ({
       product: item.product._id,
-      quantity: item.quantity
+      quantity: item.quantity,
     }));
 
     const orderData = {
       orderItems: orderItems,
       shippingAddress: this.shippingAddressForm.value as Address,
       paymentMethod: this.paymentMethod,
-      itemsPrice: this.cartTotal, // Este precio debería ser recalculado en el backend por seguridad
-      shippingPrice: 0, // Por ahora, un valor fijo
-      taxPrice: 0, // Por ahora, un valor fijo
-      totalPrice: this.cartTotal // Este precio debería ser recalculado en el backend
+      itemsPrice: this.cartTotal,
+      shippingPrice: 0,
+      taxPrice: 0,
+      totalPrice: this.cartTotal,
     };
 
     this.orderService.createOrder(orderData).subscribe({
       next: (order) => {
         this.isProcessingOrder = false;
-        this.successMessage = '¡Pedido realizado con éxito!';
+        this.successMessage =
+          '¡Pedido realizado con éxito! Redirigiendo al pago...';
         console.log('Pedido creado:', order);
 
         // Limpiar el carrito en el frontend después de un pedido exitoso
+        // Esto se hace independientemente de si el pago se completa ahora o después.
         this.authService.clearCart().subscribe({
           next: () => {
             console.log('Carrito vaciado en el backend.');
             this.authService.updateCurrentUserCart([]); // Actualiza el BehaviorSubject localmente
           },
-          error: (err) => console.error('Error al vaciar el carrito en el backend:', err)
+          error: (err) =>
+            console.error('Error al vaciar el carrito en el backend:', err),
         });
 
-        // Redirigir al historial de pedidos o a una página de confirmación
+        // --- ¡CAMBIO CLAVE AQUÍ! Redirigir a la página de detalles de la orden para el pago ---
         setTimeout(() => {
-          this.router.navigate(['/myorders']);
+          this.router.navigate(['/order-details', order._id]); // Redirige a la página de detalles de la orden
         }, 2000);
       },
       error: (error) => {
         this.isProcessingOrder = false;
         console.error('Error al crear el pedido:', error);
-        this.errorMessage = error.message || 'Error al procesar tu pedido. Inténtalo de nuevo.';
-      }
+        this.errorMessage =
+          error.message || 'Error al procesar tu pedido. Inténtalo de nuevo.';
+      },
     });
   }
 }

@@ -44,6 +44,7 @@ export const routes: Routes = [
 
   // Opcional: Ruta para el detalle de un pedido individual (si decides implementarla)
   { path: 'order/:id', component: OrderDetailComponent, title: 'Plaza - Detalle de Pedido', canActivate: [AuthGuard] },
+   { path: 'order-details/:id', component: OrderDetailComponent, canActivate: [AuthGuard] },
 
   // Ruta comodín para cualquier URL no encontrada (siempre al final)
   { path: '**', redirectTo: '' }
