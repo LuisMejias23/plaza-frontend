@@ -78,8 +78,8 @@ export class CheckoutComponent implements OnInit {
           if (cart.length === 0) {
             this.errorMessage =
               'Tu carrito está vacío. Añade productos antes de finalizar la compra.';
-            // Opcional: Redirigir a la página de productos si el carrito está vacío
-            this.router.navigate(['/products']); // Redirige si el carrito está vacío
+            
+            this.router.navigate(['/products']); 
           } else {
             this.cartItems$.next(cart);
             this.calculateCartTotal(cart);
@@ -137,6 +137,9 @@ export class CheckoutComponent implements OnInit {
     const orderItems = currentCart.map((item) => ({
       product: item.product._id,
       quantity: item.quantity,
+      name: item.product.name,         
+      imageUrl: item.product.imageUrl,
+      price: item.product.price,
     }));
 
     const orderData = {

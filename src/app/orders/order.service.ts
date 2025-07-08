@@ -45,7 +45,7 @@ export class OrderService {
    * @route GET /api/orders/myorders
    * @access Private
    */
-  getUserOrders(): Observable<Order[]> { // Ensure this explicitly returns Observable<Order[]>
+  getUserOrders(): Observable<Order[]> { 
     const httpOptions = { headers: this.getAuthHeaders() };
     return this.http.get<Order[]>(`${this.apiUrl}/myorders`, httpOptions).pipe(
       catchError(this.handleError)

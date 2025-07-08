@@ -97,15 +97,13 @@ export class AuthService {
     const httpOptions = { headers: this.getAuthHeaders() };
     return this.http.put<User>(`${this.apiUrl}/profile`, updateData, httpOptions).pipe(
       tap(user => {
-        // Actualizar el usuario en localStorage y BehaviorSubject si es necesario (ej. si el nombre de usuario cambia)
+        
         const current = this.currentUserValue;
         if (current) {
           const updatedCurrentUser: CurrentUser = {
             ...current,
-            username: user.username, // Actualizar solo los campos que pueden cambiar
+            username: user.username, 
             email: user.email,
-            // No actualices el token aquí, el backend no lo devuelve en este endpoint
-            // Asegúrate de que el backend devuelve al menos username y email en la respuesta
           };
           localStorage.setItem('currentUser', JSON.stringify(updatedCurrentUser));
           this.currentUserSubject.next(updatedCurrentUser);

@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrderService } from '../../orders/order.service';
-import { Order, OrderItem, ShippingAddress } from '../../shared/models/Order';
+import { Order, OrderItem } from '../../shared/models/Order';
 import { Product } from '../../shared/models/Product';
 import { User } from '../../shared/models/User';
 import { tap, catchError } from 'rxjs/operators'; // Importa tap y catchError
@@ -21,7 +21,7 @@ export class OrderDetailComponent implements OnInit {
   order: Order | null = null;
   isLoading: boolean = true;
   errorMessage: string | null = null;
-  paymentProcessing: boolean = false; // Nuevo estado para indicar que el pago está en proceso
+  paymentProcessing: boolean = false; 
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +44,7 @@ export class OrderDetailComponent implements OnInit {
   getOrderDetails(id: string): void {
     this.isLoading = true;
     this.errorMessage = null;
-    this.orderService.getOrderById(id).pipe( // Usa pipe para encadenar operadores
+    this.orderService.getOrderById(id).pipe(
       tap(order => {
         this.order = order;
         this.isLoading = false;
@@ -86,23 +86,21 @@ export class OrderDetailComponent implements OnInit {
     // Llama al servicio para marcar la orden como pagada en el backend
     this.orderService.markOrderAsPaid(this.order._id, simulatedPaymentResult).pipe(
       tap(updatedOrder => {
-        this.order = updatedOrder; // Actualiza la orden localmente con el estado de pagado
+        this.order = updatedOrder; 
         this.paymentProcessing = false;
-        // alert('¡Pago procesado con éxito!'); // O mostrar un mensaje más amigable
-        this.errorMessage = null; // Limpiar error si hubo
+        this.errorMessage = null; 
         console.log('Orden marcada como pagada por el usuario:', updatedOrder);
-        // Podrías mostrar un mensaje de éxito o redirigir
+        
       }),
       catchError(err => {
         this.paymentProcessing = false;
         console.error('Error al procesar el pago o marcar la orden como pagada:', err);
         this.errorMessage = err.error?.message || 'Error al procesar el pago. Inténtalo de nuevo.';
-        return of(null); // Devuelve un observable nulo para completar la suscripción
+        return of(null); 
       })
-    ).subscribe(); // Llama a subscribe al final del pipe
+    ).subscribe(); 
   }
-  // --- FIN NUEVO MÉTODO ---
-
+  
   // Helper para castear OrderItem.product a tipo Product
   getProductFromOrderItem(item: OrderItem): Product | null {
     // Asegúrate de que 'product' se haya populado en el backend y sea un objeto

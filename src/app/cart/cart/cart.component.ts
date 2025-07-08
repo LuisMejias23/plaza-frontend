@@ -1,10 +1,11 @@
+// src/app/cart/cart.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/auth/auth.service'; // Para obtener/actualizar el carrito
-import { User, CartItem } from '../../shared/models/User'; // Modelos de Usuario y CartItem
-import { Router, RouterModule } from '@angular/router'; // Para redireccionar y enlaces
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { AuthService } from '../../core/auth/auth.service';
+import { User, CartItem } from '../../shared/models/User';
+import { Router, RouterModule } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 import { Product } from '../../shared/models/Product';
 import { FormsModule } from '@angular/forms';
 
@@ -16,7 +17,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './cart.component.css'
 })
 export class CartComponent implements OnInit {
-cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorSubject<(CartItem & { product: Product })[]>([]);
+  cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorSubject<(CartItem & { product: Product })[]>([]);
 
   isLoading: boolean = true;
   errorMessage: string | null = null;
@@ -30,7 +31,6 @@ cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorS
   ) { }
 
   ngOnInit(): void {
-    // Si no está logueado, redirigir al login
     if (!this.authService.currentUserValue) {
       this.router.navigate(['/login']);
       return;
@@ -43,7 +43,6 @@ cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorS
     this.errorMessage = null;
     this.authService.getUserCart().subscribe({
       next: (items) => {
-        // Asegúrate de que los items vienen populados del backend con la info del producto
         this.cartItems$.next(items);
         this.calculateCartTotal(items);
         this.isLoading = false;
@@ -52,7 +51,7 @@ cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorS
         console.error('Error al obtener el carrito:', error);
         this.errorMessage = error.message || 'No se pudo cargar el carrito.';
         this.isLoading = false;
-        this.cartItems$.next([]); // Vaciar el carrito en caso de error
+        this.cartItems$.next([]);
       }
     });
   }
@@ -61,28 +60,47 @@ cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorS
     this.cartTotal = items.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   }
 
-  updateCartItemQuantity(productId: string, event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const newQuantity = Number(target.value);
+  getQuantityRange(maxStock: number): number[] {
+    const range = [];
+    for (let i = 1; i <= maxStock; i++) {
+      range.push(i);
+    }
+    return range;
+  }
+
+  // --- ¡MODIFICACIÓN CLAVE AQUÍ! ---
+  // newQuantity ya es el número, no un evento
+  updateCartItemQuantity(productId: string, newQuantity: number): void {
+    // ELIMINA ESTAS DOS LÍNEAS:
+    // const target = event.target as HTMLSelectElement;
+    // const newQuantity = Number(target.value);
+
+    console.log('Depuración de cantidad:', { productId: productId, quantitySent: newQuantity, typeOfQuantity: typeof newQuantity });
 
     if (newQuantity <= 0) {
-      this.removeCartItem(productId); // Si la cantidad es 0, eliminar el item
+      this.removeCartItem(productId);
       return;
     }
 
+    const currentItem = this.cartItems$.value.find(item => item.product._id === productId);
+    if (currentItem && currentItem.quantity === newQuantity) {
+        return;
+    }
+
     this.isUpdatingQuantity = true;
+    this.errorMessage = null;
+
     this.authService.addOrUpdateCartItem(productId, newQuantity).subscribe({
       next: (updatedCart) => {
         this.cartItems$.next(updatedCart);
         this.calculateCartTotal(updatedCart);
         this.isUpdatingQuantity = false;
+        this.errorMessage = null; // Limpiar mensaje de error si fue exitoso
       },
       error: (error) => {
         console.error('Error al actualizar la cantidad del carrito:', error);
         this.errorMessage = error.message || 'Error al actualizar cantidad.';
         this.isUpdatingQuantity = false;
-        // Opcional: Recargar el carrito para sincronizar con el backend si hay un error
-        // this.getCartItems();
       }
     });
   }
@@ -100,8 +118,6 @@ cartItems$: BehaviorSubject<(CartItem & { product: Product })[]> = new BehaviorS
           console.error('Error al eliminar el producto del carrito:', error);
           this.errorMessage = error.message || 'Error al eliminar producto.';
           this.isRemovingItem = false;
-          // Opcional: Recargar el carrito
-          // this.getCartItems();
         }
       });
     }

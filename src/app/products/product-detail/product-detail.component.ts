@@ -18,26 +18,25 @@ export class ProductDetailComponent implements OnInit {
   product: Product | null = null;
   isLoading: boolean = true;
   errorMessage: string | null = null;
-  quantity: number = 1; // Cantidad por defecto para añadir al carrito
+  quantity: number = 1; 
   isAddingToCart: boolean = false;
-  addToCartMessage: string | null = null; // Mensaje de éxito al añadir al carrito
-  addToCartError: string | null = null; // Mensaje de error al añadir al carrito
+  addToCartMessage: string | null = null; 
+  addToCartError: string | null = null; 
 
   constructor(
-    private route: ActivatedRoute, // Para leer parámetros de la URL (el ID del producto)
+    private route: ActivatedRoute, 
     private productService: ProductService,
-    private authService: AuthService, // Para chequear el estado del login antes de añadir al carrito
-    private router: Router // Para redirigir al usuario (ej. a /login o /cart)
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Suscribirse a los parámetros de la ruta para obtener el ID del producto
+    
     this.route.paramMap.subscribe((params) => {
-      const productId = params.get('id'); // Obtener el 'id' de la URL
+      const productId = params.get('id'); 
       if (productId) {
-        this.getProductDetails(productId); // Si hay un ID, cargar los detalles
+        this.getProductDetails(productId); 
       } else {
-        // Si no hay ID en la URL, mostrar un error
         this.errorMessage = 'ID de producto no proporcionado en la URL.';
         this.isLoading = false;
       }
@@ -110,8 +109,7 @@ export class ProductDetailComponent implements OnInit {
       quantity: this.quantity,
     };
 
-    // Llamar al servicio de autenticación para añadir/actualizar el carrito
-    // (Asumimos que authService maneja la lógica de CartService para mantener el token)
+    
     this.authService
       .addOrUpdateCartItem(cartItem.product, cartItem.quantity)
       .subscribe({
@@ -119,10 +117,7 @@ export class ProductDetailComponent implements OnInit {
           this.isAddingToCart = false;
           this.addToCartMessage = 'Producto añadido al carrito exitosamente!';
           console.log('Carrito actualizado:', updatedCart);
-          // Opcional: Podrías actualizar localmente el stock si el backend devuelve el producto con stock actualizado
-          // this.product.countInStock = updatedProductStock; // Si el backend lo devuelve
-
-          // Redirigir al carrito o limpiar el mensaje después de un tiempo
+          
           setTimeout(() => {
             this.addToCartMessage = null; // Ocultar mensaje
             this.router.navigate(['/cart']); // Redirigir al carrito para que el usuario vea su actualización

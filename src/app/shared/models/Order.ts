@@ -6,9 +6,9 @@ import { User } from './User';
 export interface OrderItem {
   name: string;
   quantity: number;
-  imageUrl: string; // Cambiado de 'image' a 'imageUrl' para coincidir con el backend
+  imageUrl: string; 
   price: number;
-  product: string | Product; // Puede ser el ID (string) o el objeto Product completo si está populado
+  product: string | Product; 
 }
 
 // Interfaz para la dirección de envío
@@ -32,9 +32,9 @@ export interface PaymentResult {
 // Interfaz principal de la Orden
 export interface Order {
   _id: string;
-  user: string | User; // Puede ser el ID del usuario (string) o el objeto User completo si está populado
+  user: string | User; 
   orderItems: OrderItem[]; // Ahora usa la interfaz OrderItem exportada
-  shippingAddress: ShippingAddress; // Ahora usa la interfaz ShippingAddress exportada
+  shippingAddress: ShippingAddress; 
   paymentMethod: string;
   paymentResult?: PaymentResult;
   taxPrice: number;
